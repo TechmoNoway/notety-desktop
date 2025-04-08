@@ -2,12 +2,13 @@ import { createNote, deleteNote, getNotes, readNote, writeNote } from '@/lib'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/types'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
-import { join } from 'path'
-import icon from '../../resources/icon.png?asset'
+import path, { join } from 'path'
+import icon from '../../resources/icon.ico?asset'
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    icon: path.join(__dirname, '../../resources/icon.ico'),
     width: 900,
     height: 670,
     show: false,
@@ -15,12 +16,8 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     center: true,
     title: 'Notety',
-    frame: true,
-    // vibrancy: 'under-window',
-    backgroundColor: '#00000000', // Transparent background
-    vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
+    backgroundMaterial: 'acrylic',
     visualEffectState: 'active',
-    titleBarStyle: 'hidden',
     trafficLightPosition: { x: 15, y: 10 },
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
