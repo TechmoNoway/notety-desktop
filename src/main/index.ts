@@ -5,6 +5,18 @@ import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.ico?asset'
 
+// buffer demo main process
+ipcMain.handle('buffer-demo', () => {
+  try {
+    const buffer = Buffer.alloc(50)
+    const data = 'A'.repeat(100)
+    buffer.write(data, 0)
+    return 'Simulated buffer overflow attempt'
+  } catch (error) {
+    return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+  }
+})
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
