@@ -8,6 +8,7 @@ declare global {
       writeNote: (title: string, content: NoteContent) => Promise<void>
       createNote: () => Promise<string>
       deleteNote: (title: string) => Promise<boolean>
+      dllHijackDemo: () => Promise<string>
     }
   }
 }

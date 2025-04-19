@@ -4,8 +4,82 @@ import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/t
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.ico?asset'
+import { exec } from 'child_process'
+import fs from 'fs'
 
 function createWindow(): void {
+  // dll hijacking demo
+  ipcMain.handle('dll-hijack-demo', async () => {
+    // Get application paths
+    const appPath = app.getAppPath()
+    const userDataPath = app.getPath('userData')
+
+    // Create a simple text file demonstrating potential DLL locations
+    const dllInfoPath = path.join(userDataPath, 'dll-search-order.txt')
+    const dllInfo = `
+DLL Search Order:
+1. The directory from which the application loaded
+2. System directory (C:\\Windows\\System32)
+3. 16-bit system directory (C:\\Windows\\System)
+4. Windows directory (C:\\Windows)
+5. Current working directory (CWD)
+6. Directories in the PATH environment variable
+
+Application directory: ${appPath}
+Current working directory: ${process.cwd()}
+User data directory: ${userDataPath}
+
+Vulnerability: If a malicious DLL with the same name exists in these locations,
+Windows may load it instead of the intended DLL.
+`
+
+    // Write information to file
+    fs.writeFileSync(dllInfoPath, dllInfo)
+
+    // Get a list of DLLs used by the app
+    const dllList: string[] = []
+    if (process.platform === 'win32') {
+      try {
+        // Use tasklist to show modules loaded by current process
+        const pid = process.pid
+        const { stdout } = await new Promise<{
+          stdout: string
+          stderr: string
+          error: Error | null
+        }>((resolve) => {
+          exec(`tasklist /M /FI "PID eq ${pid}"`, (error, stdout, stderr) => {
+            resolve({ stdout, stderr, error })
+          })
+        })
+
+        // Extract DLL names from output
+        const lines = stdout.split('\n')
+        if (lines.length > 3) {
+          for (let i = 3; i < lines.length; i++) {
+            const line = lines[i].trim()
+            if (line && line.includes('.dll')) {
+              const modules = line.split(':')[1]?.trim()
+              if (modules) {
+                modules.split(',').forEach((dll) => {
+                  if (dll.trim()) dllList.push(dll.trim())
+                })
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error getting DLL list:', error)
+      }
+    }
+
+    return {
+      infoFilePath: dllInfoPath,
+      appPath,
+      userDataPath,
+      loadedDlls: dllList.slice(0, 15) // Limit to 15 for display
+    }
+  })
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     icon: path.join(__dirname, '../../resources/icon.ico'),
