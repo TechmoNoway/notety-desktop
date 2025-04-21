@@ -9,6 +9,7 @@ declare global {
       createNote: () => Promise<string>
       deleteNote: (title: string) => Promise<boolean>
       dllHijackDemo: () => Promise<string>
+      loadDll: () => Promise<string>
     }
   }
 }

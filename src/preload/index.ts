@@ -13,7 +13,8 @@ try {
     writeNote: (...args: Parameters<WriteNote>) => ipcRenderer.invoke('writeNote', ...args),
     createNote: (...args: Parameters<CreateNote>) => ipcRenderer.invoke('createNote', ...args),
     deleteNote: (...args: Parameters<DeleteNote>) => ipcRenderer.invoke('deleteNote', ...args),
-    dllHijackDemo: () => ipcRenderer.invoke('dll-hijack-demo')
+    dllHijackDemo: () => ipcRenderer.invoke('dll-hijack-demo'),
+    loadDll: () => ipcRenderer.invoke('load-dll') // Add this line
   })
 } catch (error) {
   console.error(error)

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { FaExclamationTriangle } from 'react-icons/fa'
 
 export const DllHijackingDemo = () => {
   const [dllInfo, setDllInfo] = useState<{
@@ -9,7 +10,9 @@ export const DllHijackingDemo = () => {
   } | null>(null)
 
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'info' | 'loaded' | 'exploit'>('info')
+  const [activeTab, setActiveTab] = useState<'info' | 'loaded' | 'exploit' | 'live-demo'>('info')
+  const [dllLoadResult, setDllLoadResult] = useState<any>(null)
+  const [loadingDll, setLoadingDll] = useState(false)
 
   const runDemo = async () => {
     setLoading(true)
@@ -25,6 +28,18 @@ export const DllHijackingDemo = () => {
       console.error('Error running DLL hijacking demo:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleLoadDll = async () => {
+    setLoadingDll(true)
+    try {
+      const result = await window.context.loadDll()
+      setDllLoadResult(result)
+    } catch (error) {
+      console.error('Error loading DLL:', error)
+    } finally {
+      setLoadingDll(false)
     }
   }
 
@@ -66,6 +81,12 @@ export const DllHijackingDemo = () => {
               onClick={() => setActiveTab('exploit')}
             >
               Exploitation
+            </button>
+            <button
+              className={`px-3 py-1 ${activeTab === 'live-demo' ? 'border-b-2 border-red-500 text-red-500' : 'text-zinc-400'}`}
+              onClick={() => setActiveTab('live-demo')}
+            >
+              Live Demo
             </button>
           </div>
 
@@ -145,6 +166,111 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
                 <p className="mt-2 text-sm">
                   Placing this in a higher priority location would execute the attacker&apos;s code.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'live-demo' && (
+            <div>
+              <div className="bg-red-900/30 border border-red-900 p-3 rounded mb-4">
+                <div className="flex items-start">
+                  <FaExclamationTriangle className="text-red-500 mt-1 mr-2 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-red-400">Warning: Educational Purpose Only</h3>
+                    <p className="mt-1 text-sm">
+                      This demonstration will attempt to load an actual DLL file from your system.
+                      This is highly dangerous in real applications and would allow attackers to
+                      execute arbitrary code. Use only for educational purposes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <button
+                  onClick={handleLoadDll}
+                  disabled={loadingDll}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md font-medium transition-colors disabled:opacity-50"
+                >
+                  {loadingDll ? 'Loading DLL...' : 'Select & Load DLL'}
+                </button>
+                <p className="text-xs mt-1 text-zinc-400">
+                  Select any DLL file to demonstrate the vulnerability
+                </p>
+              </div>
+
+              {dllLoadResult && (
+                <div className="bg-zinc-900 rounded p-3 mt-4">
+                  <h4 className="font-bold mb-2">
+                    {dllLoadResult.success ? (
+                      <span className="text-red-500">DLL Loaded Successfully (VULNERABLE!)</span>
+                    ) : (
+                      <span className="text-yellow-500">DLL Load Failed (Protected)</span>
+                    )}
+                  </h4>
+
+                  <div className="text-sm">
+                    <p>
+                      <span className="text-zinc-400">Path:</span> {dllLoadResult.dllPath}
+                    </p>
+                    {dllLoadResult.functions && dllLoadResult.functions.length > 0 && (
+                      <>
+                        <p className="mt-2 text-zinc-400">Exposed Functions:</p>
+                        <ul className="list-disc ml-5">
+                          {dllLoadResult.functions.map((fn: string) => (
+                            <li key={fn} className="text-yellow-500">
+                              {fn}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-red-400">
+                          These functions could now be called by the attacker!
+                        </p>
+                      </>
+                    )}
+
+                    {dllLoadResult.error && (
+                      <p className="mt-2">
+                        <span className="text-zinc-400">Error:</span> {dllLoadResult.error}
+                      </p>
+                    )}
+
+                    <p className="mt-3 text-zinc-400">
+                      Log file created at:{' '}
+                      <span className="text-zinc-300">{dllLoadResult.logPath}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-2">How to Create a Test DLL</h3>
+                <ol className="list-decimal ml-5 space-y-1 text-sm">
+                  <li>Create a new C/C++ file called malicious.c</li>
+                  <li>Add the following code:</li>
+                </ol>
+
+                <pre className="bg-zinc-900 p-2 mt-2 rounded text-xs overflow-x-auto">
+                  {`#include <windows.h>
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        // This code runs when the DLL is loaded
+        MessageBoxA(NULL, "DLL Successfully Hijacked!", "Security Demo", MB_OK | MB_ICONWARNING);
+        
+        // In a real attack, more malicious actions would happen here
+        // system("start calc.exe");  // Launch calculator as demonstration
+    }
+    return TRUE;
+}`}
+                </pre>
+
+                <ol start={3} className="list-decimal ml-5 space-y-1 text-sm mt-2">
+                  <li>
+                    Compile with: <code>gcc -shared -o malicious.dll malicious.c</code>
+                  </li>
+                  <li>Load this DLL using the button above to see the attack in action</li>
+                </ol>
               </div>
             </div>
           )}

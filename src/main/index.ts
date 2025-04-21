@@ -1,11 +1,13 @@
 import { createNote, deleteNote, getNotes, readNote, writeNote } from '@/lib'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/types'
-import { BrowserWindow, app, ipcMain, shell } from 'electron'
+import { BrowserWindow, app, ipcMain, shell, dialog } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.ico?asset'
 import { exec } from 'child_process'
 import fs from 'fs'
+import ffi from 'ffi-napi'
+import ref from 'ref-napi'
 
 function createWindow(): void {
   // dll hijacking demo
@@ -77,6 +79,83 @@ Windows may load it instead of the intended DLL.
       appPath,
       userDataPath,
       loadedDlls: dllList.slice(0, 15) // Limit to 15 for display
+    }
+  })
+
+  ipcMain.handle('load-dll', async () => {
+    try {
+      // Let user select a DLL file
+      const { canceled, filePaths } = await dialog.showOpenDialog({
+        title: 'Select DLL to Load',
+        filters: [{ name: 'DLL Files', extensions: ['dll'] }],
+        properties: ['openFile']
+      })
+
+      if (canceled || !filePaths[0]) {
+        return { success: false, message: 'No file selected' }
+      }
+
+      const dllPath = filePaths[0]
+
+      // Create log file for demonstration
+      const logPath = path.join(app.getPath('userData'), 'dll-loading-log.txt')
+      fs.writeFileSync(
+        logPath,
+        `[SECURITY DEMO] Attempting to load DLL: ${dllPath}\n` +
+          `Time: ${new Date().toISOString()}\n` +
+          `This demonstration shows how applications with DLL loading vulnerabilities\n` +
+          `can execute arbitrary code from untrusted locations.\n`
+      )
+
+      // VULNERABILITY: Attempting to load the DLL
+      const results = {
+        dllPath,
+        logPath,
+        loadAttempted: true,
+        functions: []
+      }
+
+      try {
+        // This is the vulnerable part - we're trying to load a user-selected DLL
+        // In a real app, this would be extremely dangerous!
+        const library = ffi.Library(dllPath, {
+          // Common exports that might exist in the DLL
+          DllMain: ['int', ['pointer', 'int', 'pointer']],
+          MessageBoxA: ['int', ['int', 'string', 'string', 'int']]
+        })
+
+        // List available functions (this is demonstrative)
+        results.functions = Object.keys(library)
+
+        // Log successful load
+        fs.appendFileSync(
+          logPath,
+          `\nDLL loaded successfully!\n` +
+            `Available functions: ${results.functions.join(', ')}\n` +
+            `\nWARNING: In a real attack scenario, malicious code would execute now!`
+        )
+
+        return {
+          success: true,
+          ...results
+        }
+      } catch (error) {
+        // Log failure
+        fs.appendFileSync(
+          logPath,
+          `\nFailed to load DLL: ${error.message}\n` +
+            `This is actually good - applications should prevent loading untrusted DLLs.`
+        )
+
+        return {
+          success: false,
+          error: error.message,
+          ...results
+        }
+      }
+    } catch (error) {
+      console.error('Error in load-dll handler:', error)
+      return { success: false, error: error.message }
     }
   })
 
