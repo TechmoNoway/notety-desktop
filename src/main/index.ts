@@ -72,17 +72,7 @@ app.whenReady().then(() => {
       const configFile = path.join(userDataPath, 'insecure-config.json')
 
       // Create a "configuration file" with sensitive data
-      const configData = {
-        apiKey: 'sk_test_12345678abcdefghijklmnopqrstuvwxyz',
-        databaseUrl: 'mongodb://admin:password@localhost:27017/app',
-        adminUser: 'administrator',
-        adminPassword: 'SecretPassw0rd!',
-        serverEndpoints: {
-          api: 'https://api.company.com',
-          auth: 'https://auth.company.com',
-          storage: 'https://storage.company.com'
-        }
-      }
+      // Add this later
 
       fs.writeFileSync(configFile, JSON.stringify(configData, null, 2))
 
@@ -157,17 +147,7 @@ app.whenReady().then(() => {
       const secureConfigFile = path.join(userDataPath, 'secure-config.json')
 
       // Create a "configuration file" with the same sensitive data
-      const configData = {
-        apiKey: 'sk_test_12345678abcdefghijklmnopqrstuvwxyz',
-        databaseUrl: 'mongodb://admin:password@localhost:27017/app',
-        adminUser: 'administrator',
-        adminPassword: 'SecretPassw0rd!',
-        serverEndpoints: {
-          api: 'https://api.company.com',
-          auth: 'https://auth.company.com',
-          storage: 'https://storage.company.com'
-        }
-      }
+      // Add this later
 
       fs.writeFileSync(secureConfigFile, JSON.stringify(configData, null, 2))
 
