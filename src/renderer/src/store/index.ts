@@ -8,6 +8,9 @@ declare global {
       writeNote: (title: string, content: NoteContent) => Promise<void>
       createNote: () => Promise<string>
       deleteNote: (title: string) => Promise<boolean>
+      filePermissionDemo: () => Promise<string>
+      secureFilePermissionDemo: () => Promise<string>
+      exploitFilePermissions: (content: string) => Promise<string>
     }
   }
 }

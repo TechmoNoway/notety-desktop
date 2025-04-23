@@ -13,10 +13,10 @@ try {
     writeNote: (...args: Parameters<WriteNote>) => ipcRenderer.invoke('writeNote', ...args),
     createNote: (...args: Parameters<CreateNote>) => ipcRenderer.invoke('createNote', ...args),
     deleteNote: (...args: Parameters<DeleteNote>) => ipcRenderer.invoke('deleteNote', ...args),
-    //This is for testing security
-    renderNote: (content: string) => {
-      return content
-    }
+    filePermissionDemo: () => ipcRenderer.invoke('filePermissionDemo'),
+    secureFilePermissionDemo: () => ipcRenderer.invoke('secureFilePermissionDemo'),
+    exploitFilePermissions: (content: string) =>
+      ipcRenderer.invoke('exploitFilePermissions', content)
   })
 } catch (error) {
   console.error(error)

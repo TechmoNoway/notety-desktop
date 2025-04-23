@@ -4,6 +4,8 @@ import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/t
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.ico?asset'
+import { execSync } from 'child_process'
+import fs from 'fs'
 
 function createWindow(): void {
   // Create the browser window.
@@ -63,6 +65,186 @@ app.whenReady().then(() => {
   ipcMain.handle('writeNote', (_, ...args: Parameters<WriteNote>) => writeNote(...args))
   ipcMain.handle('createNote', (_, ...args: Parameters<CreateNote>) => createNote(...args))
   ipcMain.handle('deleteNote', (_, ...args: Parameters<DeleteNote>) => deleteNote(...args))
+
+  ipcMain.handle('filePermissionDemo', async () => {
+    try {
+      const userDataPath = app.getPath('userData')
+      const configFile = path.join(userDataPath, 'insecure-config.json')
+
+      // Create a "configuration file" with sensitive data
+      const configData = {
+        apiKey: 'sk_test_12345678abcdefghijklmnopqrstuvwxyz',
+        databaseUrl: 'mongodb://admin:password@localhost:27017/app',
+        adminUser: 'administrator',
+        adminPassword: 'SecretPassw0rd!',
+        serverEndpoints: {
+          api: 'https://api.company.com',
+          auth: 'https://auth.company.com',
+          storage: 'https://storage.company.com'
+        }
+      }
+
+      fs.writeFileSync(configFile, JSON.stringify(configData, null, 2))
+
+      // Determine if file is world-writable
+      let isWorldWritable = false
+
+      try {
+        if (process.platform === 'win32') {
+          // On Windows, use icacls to check permissions
+          const output = execSync(`icacls "${configFile}"`).toString()
+          isWorldWritable =
+            output.includes('Everyone:(F)') ||
+            output.includes('Everyone:(M)') ||
+            output.includes('Everyone:(W)')
+
+          // For demo purposes, make it world-writable
+          execSync(`icacls "${configFile}" /grant Everyone:F`)
+
+          // Check again after modifying
+          const newOutput = execSync(`icacls "${configFile}"`).toString()
+          isWorldWritable =
+            newOutput.includes('Everyone:(F)') ||
+            newOutput.includes('Everyone:(M)') ||
+            newOutput.includes('Everyone:(W)')
+        } else {
+          // On Unix-like systems, check file mode
+          const stats = fs.statSync(configFile)
+          isWorldWritable = !!(stats.mode & 0o002) // Check if world-writable
+
+          // Make it world-writable for the demo
+          fs.chmodSync(configFile, 0o666)
+
+          // Check again
+          const newStats = fs.statSync(configFile)
+          isWorldWritable = !!(newStats.mode & 0o002)
+        }
+      } catch (error) {
+        console.error('Error checking file permissions:', error)
+      }
+
+      // Create a log file explaining the vulnerability
+      const logPath = path.join(userDataPath, 'insecure-permissions-log.txt')
+      fs.writeFileSync(
+        logPath,
+        `[SECURITY VULNERABILITY: INSECURE FILE PERMISSIONS]\n` +
+          `Time: ${new Date().toISOString()}\n\n` +
+          `Created vulnerable config file at: ${configFile}\n` +
+          `This file is ${isWorldWritable ? 'world-writable (VULNERABLE)' : 'not world-writable'}\n\n` +
+          `Security Impact:\n` +
+          `- Sensitive credentials could be stolen\n` +
+          `- Configuration could be modified by attackers\n` +
+          `- Server endpoints could be redirected to malicious servers\n` +
+          `- Malicious commands could be injected into config options\n\n` +
+          `Proper security would require restricting file permissions to only the application user.`
+      )
+
+      return {
+        configFile,
+        logPath,
+        isWorldWritable,
+        configData
+      }
+    } catch (error) {
+      console.error('Error in filePermissionDemo:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  })
+
+  ipcMain.handle('secureFilePermissionDemo', async () => {
+    try {
+      const userDataPath = app.getPath('userData')
+      const secureConfigFile = path.join(userDataPath, 'secure-config.json')
+
+      // Create a "configuration file" with the same sensitive data
+      const configData = {
+        apiKey: 'sk_test_12345678abcdefghijklmnopqrstuvwxyz',
+        databaseUrl: 'mongodb://admin:password@localhost:27017/app',
+        adminUser: 'administrator',
+        adminPassword: 'SecretPassw0rd!',
+        serverEndpoints: {
+          api: 'https://api.company.com',
+          auth: 'https://auth.company.com',
+          storage: 'https://storage.company.com'
+        }
+      }
+
+      fs.writeFileSync(secureConfigFile, JSON.stringify(configData, null, 2))
+
+      // Apply secure permissions - only owner can access
+      if (process.platform === 'win32') {
+        // Remove inherited permissions
+        execSync(`icacls "${secureConfigFile}" /inheritance:r`)
+        // Grant only current user full control
+        execSync(`icacls "${secureConfigFile}" /grant:r "${process.env.USERNAME}:(F)"`)
+      } else {
+        // On Unix-like systems, only owner can read/write (0o600)
+        fs.chmodSync(secureConfigFile, 0o600)
+      }
+
+      // Check if file is world-writable (should be false)
+      let isWorldWritable = false
+      try {
+        if (process.platform === 'win32') {
+          const output = execSync(`icacls "${secureConfigFile}"`).toString()
+          isWorldWritable =
+            output.includes('Everyone:(F)') ||
+            output.includes('Everyone:(M)') ||
+            output.includes('Everyone:(W)')
+        } else {
+          const stats = fs.statSync(secureConfigFile)
+          isWorldWritable = !!(stats.mode & 0o002)
+        }
+      } catch (error) {
+        console.error('Error checking secure file permissions:', error)
+      }
+
+      return {
+        configFile: secureConfigFile,
+        isWorldWritable,
+        configData
+      }
+    } catch (error) {
+      console.error('Error in secureFilePermissionDemo:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  })
+
+  ipcMain.handle('exploitFilePermissions', async (_, modifiedContent) => {
+    try {
+      const userDataPath = app.getPath('userData')
+      const configFile = path.join(userDataPath, 'insecure-config.json')
+
+      // Write the modified content to the file
+      fs.writeFileSync(configFile, modifiedContent)
+
+      // Parse the content to see what was changed (removed unused variable)
+      JSON.parse(modifiedContent)
+
+      // Log the exploitation
+      const exploitLogPath = path.join(userDataPath, 'exploitation-log.txt')
+      fs.writeFileSync(
+        exploitLogPath,
+        `[SECURITY EXPLOITATION LOG]\n` +
+          `Time: ${new Date().toISOString()}\n\n` +
+          `Vulnerable file was modified: ${configFile}\n\n` +
+          `Modified content:\n${modifiedContent}\n\n` +
+          `This demonstrates how an attacker with lower privileges could modify\n` +
+          `configuration used by a higher-privileged application, potentially leading\n` +
+          `to credential theft, data exfiltration, or code execution.`
+      )
+
+      return {
+        success: true,
+        modifiedContent,
+        exploitLogPath,
+        message: 'File successfully modified by "attacker"'
+      }
+    } catch (error) {
+      console.error('Error in exploitFilePermissions:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  })
 
   createWindow()
 
