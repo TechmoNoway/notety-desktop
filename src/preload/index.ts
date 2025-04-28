@@ -13,10 +13,10 @@ try {
     writeNote: (...args: Parameters<WriteNote>) => ipcRenderer.invoke('writeNote', ...args),
     createNote: (...args: Parameters<CreateNote>) => ipcRenderer.invoke('createNote', ...args),
     deleteNote: (...args: Parameters<DeleteNote>) => ipcRenderer.invoke('deleteNote', ...args),
-    //This is for testing security
-    renderNote: (content: string) => {
-      return content
-    }
+    // Privilege escalation demo handlers
+    scanPrivilegeEscalation: () => ipcRenderer.invoke('scanPrivilegeEscalation'),
+    simulatePrivilegeEscalation: (vector: string) =>
+      ipcRenderer.invoke('simulatePrivilegeEscalation', vector)
   })
 } catch (error) {
   console.error(error)

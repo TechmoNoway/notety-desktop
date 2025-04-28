@@ -8,6 +8,8 @@ declare global {
       writeNote: (title: string, content: NoteContent) => Promise<void>
       createNote: () => Promise<string>
       deleteNote: (title: string) => Promise<boolean>
+      scanPrivilegeEscalation: () => Promise<string>
+      simulatePrivilegeEscalation: (vector: string) => Promise<void>
     }
   }
 }
