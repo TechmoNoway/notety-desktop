@@ -4,6 +4,11 @@ import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/t
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.ico?asset'
+import { exec, execFile } from 'child_process'
+import { promisify } from 'util'
+
+// Promisify the execFile function for cleaner async code
+const execFilePromise = promisify(execFile)
 
 function createWindow(): void {
   // Create the browser window.
@@ -63,6 +68,73 @@ app.whenReady().then(() => {
   ipcMain.handle('writeNote', (_, ...args: Parameters<WriteNote>) => writeNote(...args))
   ipcMain.handle('createNote', (_, ...args: Parameters<CreateNote>) => createNote(...args))
   ipcMain.handle('deleteNote', (_, ...args: Parameters<DeleteNote>) => deleteNote(...args))
+
+  // Vulnerability demo handlers
+  ipcMain.handle('executeUnsafeCommand', async (event, command) => {
+    try {
+      // WARNING: This is intentionally vulnerable for demonstration purposes!
+      // NEVER use code like this in a real application!
+      return new Promise((resolve, reject) => {
+        // The security vulnerability: directly executing untrusted input
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error executing command: ${error.message}`)
+            reject(error.message)
+            return
+          }
+          
+          // Log for demonstration
+          console.log(`[UNSAFE] Executed: ${command}`)
+          console.log(`Output: ${stdout || stderr}`)
+          
+          resolve(stdout || stderr)
+        })
+      })
+    } catch (error) {
+      console.error('Error in executeUnsafeCommand:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('executeSafeCommand', async (event, command) => {
+    try {
+      // Parse the command to get the base command and arguments
+      const parts = command.trim().split(/\s+/)
+      const baseCommand = parts[0]
+      const args = parts.slice(1)
+      
+      // Whitelist of allowed commands
+      const allowedCommands = ['echo', 'dir', 'ls', 'pwd', 'whoami', 'hostname', 'date', 'time']
+      
+      // Security check: Only allow specific commands
+      if (!allowedCommands.includes(baseCommand)) {
+        throw new Error(`Command not allowed: ${baseCommand}. Allowed commands: ${allowedCommands.join(', ')}`)
+      }
+      
+      // Log for demonstration
+      console.log(`[SAFE] Executing: ${baseCommand} with args:`, args)
+      
+      // Use execFile instead of exec for better security (prevents shell injection)
+      const result = await execFilePromise(baseCommand, args, {
+        shell: false,  // Don't run in a shell to prevent injection
+        timeout: 5000  // Set a reasonable timeout
+      })
+      
+      return result.stdout || result.stderr
+    } catch (error) {
+      console.error('Error in executeSafeCommand:', error)
+      throw error
+    }
+  })
+
+  // Log attempts to expose this vulnerability through other channels
+  ipcMain.on('dangerous-command', (event, command) => {
+    console.error('⚠️ SECURITY ALERT: Attempt to use dangerous-command IPC channel was blocked')
+    console.error('Command attempted:', command)
+    
+    // For demo, show that we're blocking this
+    event.reply('command-result', 'ERROR: This vulnerability has been patched. Use the proper demo.')
+  })
 
   createWindow()
 

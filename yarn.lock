@@ -1420,6 +1420,20 @@
   resolved "https://registry.yarnpkg.com/@mdxeditor/gurx/-/gurx-1.2.3.tgz#088ecff5cec85f8d9667a599a23d15fb167e57c0"
   integrity sha512-5DQOlEx46oN9spggrC8husAGAhVoEFBGIYKN48es08XhRUbSU6l5bcIQYwRrQaY8clU1tExIcXzw8/fNnoxjpg==
 
+"@monaco-editor/loader@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@monaco-editor/loader/-/loader-1.5.0.tgz#dcdbc7fe7e905690fb449bed1c251769f325c55d"
+  integrity sha512-hKoGSM+7aAc7eRTRjpqAZucPmoNOC4UUbknb/VNoTkEIkCPhqV8LfbsgM1webRM7S/z21eHEx9Fkwx8Z/C/+Xw==
+  dependencies:
+    state-local "^1.0.6"
+
+"@monaco-editor/react@^4.7.0":
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/@monaco-editor/react/-/react-4.7.0.tgz#35a1ec01bfe729f38bfc025df7b7bac145602a60"
+  integrity sha512-cyzXQCtO47ydzxpQtCGSQGOC8Gk3ZUeBXFAxD+CWXYFo5OqZyZUonFl0DwUlTyAfRHntBfw2p3w4s9R6oe1eCA==
+  dependencies:
+    "@monaco-editor/loader" "^1.5.0"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -5464,6 +5478,16 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
+monaco-editor@^0.52.2:
+  version "0.52.2"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.52.2.tgz#53c75a6fcc6802684e99fd1b2700299857002205"
+  integrity sha512-GEQWEZmfkOGLdd3XK8ryrfWz3AIP8YymVXiPHEdewrUq7mh0qrKrfHLNCXcbB6sTnMLnOZ3ztSiKcciFUkIJwQ==
+
+monaco-types@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/monaco-types/-/monaco-types-0.1.0.tgz#3a3066aba499cb5923cd60efc736f3f14a169e10"
+  integrity sha512-aWK7SN9hAqNYi0WosPoMjenMeXJjwCxDibOqWffyQ/qXdzB/86xshGQobRferfmNz7BSNQ8GB0MD0oby9/5fTQ==
+
 ms@^2.0.0, ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
@@ -6460,6 +6484,11 @@ stat-mode@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/stat-mode/-/stat-mode-1.0.0.tgz#68b55cb61ea639ff57136f36b216a291800d1465"
   integrity sha512-jH9EhtKIjuXZ2cWxmXS8ZP80XyC3iasQxMDV8jzhNJpfDb7VbQLVW4Wvsxz9QZvzV+G4YoSfBUVKDOyxLzi/sg==
+
+state-local@^1.0.6:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/state-local/-/state-local-1.0.7.tgz#da50211d07f05748d53009bee46307a37db386d5"
+  integrity sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==
 
 static-browser-server@1.0.3:
   version "1.0.3"

@@ -13,10 +13,9 @@ try {
     writeNote: (...args: Parameters<WriteNote>) => ipcRenderer.invoke('writeNote', ...args),
     createNote: (...args: Parameters<CreateNote>) => ipcRenderer.invoke('createNote', ...args),
     deleteNote: (...args: Parameters<DeleteNote>) => ipcRenderer.invoke('deleteNote', ...args),
-    //This is for testing security
-    renderNote: (content: string) => {
-      return content
-    }
+    // Security demo functions
+    executeUnsafeCommand: (command: string) => ipcRenderer.invoke('executeUnsafeCommand', command),
+    executeSafeCommand: (command: string) => ipcRenderer.invoke('executeSafeCommand', command)
   })
 } catch (error) {
   console.error(error)
