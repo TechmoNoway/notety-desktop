@@ -14,9 +14,9 @@ try {
     createNote: (...args: Parameters<CreateNote>) => ipcRenderer.invoke('createNote', ...args),
     deleteNote: (...args: Parameters<DeleteNote>) => ipcRenderer.invoke('deleteNote', ...args),
     // Privilege escalation demo handlers
-    scanPrivilegeEscalation: () => ipcRenderer.invoke('scanPrivilegeEscalation'),
-    simulatePrivilegeEscalation: (vector: string) =>
-      ipcRenderer.invoke('simulatePrivilegeEscalation', vector)
+    writeLogToPath: (text: string, path: string) => ipcRenderer.send('write-log', text, path),
+    relaunchAsAdmin: () => ipcRenderer.invoke('relaunch-as-admin'),
+    checkAdminStatus: () => ipcRenderer.invoke('check-admin-status')
   })
 } catch (error) {
   console.error(error)

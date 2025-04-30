@@ -8,8 +8,9 @@ declare global {
       writeNote: (title: string, content: NoteContent) => Promise<void>
       createNote: () => Promise<string>
       deleteNote: (title: string) => Promise<boolean>
-      scanPrivilegeEscalation: () => Promise<string>
-      simulatePrivilegeEscalation: (vector: string) => Promise<void>
+      writeLogToPath: (text: string, path: string) => Promise<void>
+      relaunchAsAdmin: () => Promise<void>
+      checkAdminStatus: () => Promise<boolean>
     }
   }
 }

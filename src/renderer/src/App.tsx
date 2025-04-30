@@ -9,14 +9,14 @@ import {
   RootLayout,
   Sidebar
 } from './components'
-
-import { PrivilegeEscalationDemo } from './components/demos/PrivilegeEscalationDemo'
+import { AdvancedEditor } from './components/AdvancedEditor'
+import { AdminStatusBanner } from './components/AdminStatusBanner'
 
 const App = () => {
   const contentContainerRef = useRef<HTMLDivElement>(null)
-  const [activeView, setActiveView] = useState<
-    'notes' | 'file-permissions' | 'privilege-escalation'
-  >('notes')
+  const [activeView, setActiveView] = useState<'notes' | 'advanced' | 'privilege-escalation'>(
+    'notes'
+  )
 
   const resetScroll = () => {
     contentContainerRef.current?.scrollTo(0, 0)
@@ -25,29 +25,30 @@ const App = () => {
   return (
     <>
       <DraggableTopBar />
+      <AdminStatusBanner />
       <RootLayout>
         <Sidebar className="p-2">
           <ActionButtonsRow className="flex justify-between mt-1" />
           <NotePreviewList className="mt-3 space-y-1" onSelect={resetScroll} />
 
           <div className="mt-6 pt-4 border-t border-zinc-700">
-            <h3 className="text-sm font-semibold mb-2 text-zinc-400">Security Demos</h3>
+            <h3 className="text-sm font-semibold mb-2 text-zinc-400">Features</h3>
             <button
               onClick={() => setActiveView('notes')}
               className={`w-full text-left px-2 py-1.5 mb-1 rounded ${
                 activeView === 'notes' ? 'bg-zinc-700' : 'hover:bg-zinc-800'
               }`}
             >
-              📝 Notes Editor
+              📝 Standard Editor
             </button>
 
             <button
-              onClick={() => setActiveView('privilege-escalation')}
+              onClick={() => setActiveView('advanced')}
               className={`w-full text-left px-2 py-1.5 mb-1 rounded ${
-                activeView === 'privilege-escalation' ? 'bg-orange-900/50' : 'hover:bg-zinc-800'
+                activeView === 'advanced' ? 'bg-blue-900/50' : 'hover:bg-zinc-800'
               }`}
             >
-              ⬆️ Privilege Escalation
+              🔓 Advanced Editor
             </button>
           </div>
         </Sidebar>
@@ -58,11 +59,9 @@ const App = () => {
               <FloatingNoteTitle className="pt-2" />
               <MarkdownEditor />
             </>
-          ) : (
-            <div className="p-4">
-              <PrivilegeEscalationDemo />
-            </div>
-          )}
+          ) : activeView === 'advanced' ? (
+            <AdvancedEditor />
+          ) : null}
         </Content>
       </RootLayout>
     </>
